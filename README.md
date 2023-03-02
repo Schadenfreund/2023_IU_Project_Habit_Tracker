@@ -68,16 +68,16 @@ python app_GUI.py (not recommended)
                                                    |
             +------------------------+-------------------------------+--------------------------+
             |                        |                               |                          |
-+------------------+    +------------------------+    +-----------------------+    +-----------------------+
-| habit_tracker.py |    | database.py            |    | motivational_quotes.py|    | habits.py             |
-|                  |    |                        |    |                       |    |                       |
-| add_habit()      |    | create_table()         |    | get_quote()           |    | check()               |    
-| delete_habit()   |    | insert_habit()         |    |                       |    |                       |
-| modify_habit()   |    | delete_habit()         |    |                       |    |                       |
-| check_habit()    |    | update_habit()         |    |                       |    |                       |
-|                  |    | get_all_habits()       |    |                       |    |                       |
-|                  |    | update_habit_stats()   |    |                       |    |                       |
-+------------------+    +------------------------+    +-----------------------+    +-----------------------+
+     +------------------+    +------------------------+    +-----------------------+    +-----------------------+
+     | habit_tracker.py |    | database.py            |    | motivational_quotes.py|    | habits.py             |
+     |                  |    |                        |    |                       |    |                       |
+     | add_habit()      |    | create_table()         |    | get_quote()           |    | check()               |    
+     | delete_habit()   |    | insert_habit()         |    |                       |    |                       |
+     | modify_habit()   |    | delete_habit()         |    |                       |    |                       |
+     | check_habit()    |    | update_habit()         |    |                       |    |                       |
+     |                  |    | get_all_habits()       |    |                       |    |                       |
+     |                  |    | update_habit_stats()   |    |                       |    |                       |
+     +------------------+    +------------------------+    +-----------------------+    +-----------------------+
 
 
 The app_CLI.py (or app_GUI.py) script is the main entry point for the app. It interacts with the HabitTracker, Database, MotivationalQuotes, and Habits classes, which are located in separate Python modules. The Habits class defines the Habit object, which represents a single habit and has methods for checking it off and updating its stats. The HabitTracker class provides methods for adding, deleting, modifying, and checking off habits. The Database class handles all interactions with the SQLite database file that stores the user's habits in a database.db file that is located in the same directory as the rest of the .py files. The MotivationalQuotes class provides a method for generating a random motivational quotes as soon as the user checks off a habit with option 4) when running 'app_CLI.py'.
