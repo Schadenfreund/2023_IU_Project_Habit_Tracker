@@ -1,0 +1,15 @@
+The Habit Tracker app is a Python-based CLI tool designed to help users keep track of their daily or weekly habits. The app has been designed to be easy to use, with simple commands that allow users to add, modify, and delete habits as well as mark them as completed.
+
+The app consists of five Python modules: app_CLI.py, database.py, motivational_quotes.py, habits.py, and habit_tracker.py. The app_CLI.py module is the main entry point for the app, and it provides users with a simple menu that they can use to interact with the other modules.
+
+The database.py module is responsible for creating a SQLite database file named habits.db and managing all interactions with the database file. It contains methods for creating the table, inserting, updating, and deleting habits, as well as fetching all habits from the database.
+
+The motivational_quotes.py module uses the requests and json packages to fetch a motivational quote of the day from the 'https://type.fit/api/quotes' API.
+
+The habits.py module defines the Habit class, which represents a single habit that the user wants to track. The class includes methods for checking off the habit and keeping track of the user's progress.
+
+The habit_tracker.py module defines the HabitTracker class, which keeps track of all the user's habits. It includes methods for adding, modifying, deleting, and checking off habits.
+
+The app has several features, including adding, deleting, modifying, and checking off habits. Users can add new habits by specifying the name of the habit and how often they want to do it (daily or weekly). They can also modify the name or frequency of a habit, delete a habit, and mark a habit as completed for the day or week.
+
+Overall, the app is designed to be a simple and effective tool for tracking daily or weekly habits. With its easy-to-use interface and powerful features, it can help users stay motivated and achieve their goals.
