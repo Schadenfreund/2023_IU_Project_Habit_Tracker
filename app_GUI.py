@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 from habit_tracker import HabitTracker
 from database import Database
 from motivational_quotes import MotivationalQuotes
-from PyQt5 import QtCore
+
 
 
 class HabitTrackerWindow(QWidget):
@@ -31,46 +31,56 @@ class HabitTrackerWindow(QWidget):
         self.frequency_spin.setValue(1)
         layout.addWidget(self.frequency_spin, 1, 1)
 
+        target_streak_label = QLabel("Target streak:")
+        layout.addWidget(target_streak_label, 2, 0)
+
+        self.target_streak_spin = QSpinBox()
+        self.target_streak_spin.setRange(1, 365)
+        self.target_streak_spin.setValue(21)
+        layout.addWidget(self.target_streak_spin, 2, 1)
+
         add_habit_button = QPushButton("Add Habit")
         add_habit_button.clicked.connect(self.add_habit)
-        layout.addWidget(add_habit_button, 2, 1)
+        layout.addWidget(add_habit_button, 3, 1)
 
         self.habit_list = QTextEdit()
-        layout.addWidget(self.habit_list, 3, 0, 1, 2)
+        layout.addWidget(self.habit_list, 4, 0, 1, 2)
 
         delete_habit_button = QPushButton("Delete Habit")
         delete_habit_button.clicked.connect(self.delete_habit)
-        layout.addWidget(delete_habit_button, 4, 0)
+        layout.addWidget(delete_habit_button, 5, 0)
 
         modify_habit_button = QPushButton("Modify Habit")
         modify_habit_button.clicked.connect(self.modify_habit)
-        layout.addWidget(modify_habit_button, 4, 0)
+        layout.addWidget(modify_habit_button, 5, 1)
 
         check_habit_button = QPushButton("Check Habit")
         check_habit_button.clicked.connect(self.check_habit)
-        layout.addWidget(check_habit_button, 4, 1)
+        layout.addWidget(check_habit_button, 6, 0)
 
         list_habits_button = QPushButton("Update List")
         list_habits_button.clicked.connect(self.list_habits)
-        layout.addWidget(list_habits_button, 5, 0)
+        layout.addWidget(list_habits_button, 6, 1)
 
         quit_button = QPushButton("Quit")
         quit_button.clicked.connect(self.close)
-        layout.addWidget(quit_button, 5, 1)
+        layout.addWidget(quit_button, 7, 0)
 
         self.quote_label = QLabel()
         self.quote_label.setWordWrap(True)
-        layout.addWidget(self.quote_label, 6, 0, 1, 2)
+        layout.addWidget(self.quote_label, 8, 0, 1, 2)
 
         self.setLayout(layout)
 
     def add_habit(self):
         name = self.habit_name_edit.text()
         frequency = self.frequency_spin.value()
-        habit = self.tracker.add_habit(name, frequency)
-        self.db.insert_habit(habit.name, habit.frequency)
+        target_streak = self.target_streak_spin.value()
+        habit = self.tracker.add_habit(name, frequency, target_streak)
+        self.db.insert_habit(habit.name, habit.frequency, habit.target_streak)
         self.habit_name_edit.setText("")
         self.frequency_spin.setValue(1)
+        self.target_streak_spin.setValue(21)
         self.habit_list.setText(self.get_habit_list())
 
     def delete_habit(self):
@@ -92,10 +102,13 @@ class HabitTrackerWindow(QWidget):
         if not habits:
             QMessageBox.information(self, "No Habits", "You have no habits to modify.")
             return
+
         habit_names = [habit.name for habit in habits]
         choice, ok = QInputDialog.getItem(self, "Modify Habit", "Select a habit to modify:", habit_names, 0, False)
         if ok:
             habit_name = choice
+
+            # Get new habit name from user
             new_name, ok = QInputDialog.getText(self, "Modify Habit",
                                                 f"Enter the new name of the habit '{habit_name}' (leave blank to not change):",
                                                 QLineEdit.Normal, habit_name)
@@ -103,28 +116,39 @@ class HabitTrackerWindow(QWidget):
                 new_name = new_name.strip()
                 if new_name == "":
                     new_name = habit_name
+
+                # Get new habit frequency from user
                 new_frequency, ok = QInputDialog.getInt(self, "Modify Habit",
                                                         "Enter the new frequency of the habit (leave blank to not change):",
                                                         value=habits[habit_names.index(habit_name)].frequency, min=1,
                                                         max=7)
                 if ok:
-                    self.tracker.modify_habit(habit_name, new_name, new_frequency)
-                    self.db.update_habit(habit_name, new_name, new_frequency)
-                    QMessageBox.information(self, "Habit Modified", f"The habit '{habit_name}' has been modified.")
-                    self.habit_list.setText(self.get_habit_list())
+                    # Get new habit target streak from user
+                    new_target_streak, ok = QInputDialog.getInt(self, "Modify Habit",
+                                                                "Enter the new target streak of the habit (leave blank to not change):",
+                                                                value=habits[
+                                                                    habit_names.index(habit_name)].target_streak, min=1,
+                                                                max=365)
+                    if ok:
+                        self.tracker.modify_habit(habit_name, new_name, new_frequency, new_target_streak)
+                        self.db.update_habit(habit_name, new_name, new_frequency, new_target_streak)
+                        QMessageBox.information(self, "Habit Modified", f"The habit '{habit_name}' has been modified.")
+                        self.habit_list.setText(self.get_habit_list())
 
     def check_habit(self):
         habits = self.db.get_all_habits()
         if not habits:
             QMessageBox.information(self, "No Habits", "You have no habits to check off.")
             return
+
         habit_names = [habit.name for habit in habits]
         choice, ok = QInputDialog.getItem(self, "Check Habit", "Select a habit to check off:", habit_names, 0, False)
         if ok:
             habit = habits[habit_names.index(choice)]
             self.tracker.check_habit(habit.name)
             self.db.update_habit_stats(habit)
-            QMessageBox.information(self, "Habit Checked", f"You checked the habit '{habit.name}' on {habit.last_checked}. Your streak is now {habit.streak}. You have {habit.points} points.")
+            QMessageBox.information(self, "Habit Checked",
+                                    f"You checked the habit '{habit.name}' on {habit.last_checked}. Your streak is now {habit.streak}. You have {habit.points} points.")
             self.habit_list.setText(self.get_habit_list())
             self.show_quote()
 
@@ -134,13 +158,14 @@ class HabitTrackerWindow(QWidget):
             self.habit_list.setText("You have no habits.")
         else:
             habit_list = "<table>"
-            habit_list += "<tr><th align='left'>Habit</th><th align='center'>Frequency</th><th align='center'>Streak</th><th align='center'>Points</th></tr>"
+            habit_list += "<tr><th align='left'>Habit</th><th align='center'>Frequency</th><th align='center'>Streak</th><th align='center'>Points</th><th align='center'>Target Streak</th></tr>"
             for habit in habits:
                 habit_list += "<tr>"
                 habit_list += f"<td>{habit.name}</td>"
                 habit_list += f"<td align='center'>{habit.frequency} day{'s' if habit.frequency > 1 else ''}</td>"
                 habit_list += f"<td align='center'>{habit.streak}</td>"
                 habit_list += f"<td align='center'>{habit.points}</td>"
+                habit_list += f"<td align='center'>{habit.target_streak if habit.target_streak else '-'}</td>"
                 habit_list += "</tr>"
             habit_list += "</table>"
             self.habit_list.setHtml(habit_list)
@@ -155,13 +180,14 @@ class HabitTrackerWindow(QWidget):
             self.habit_list.setText("You have no habits.")
         else:
             habit_list = "<table>"
-            habit_list += "<tr><th align='left'>Habit</th><th align='center'>Frequency</th><th align='center'>Streak</th><th align='center'>Points</th></tr>"
+            habit_list += "<tr><th align='left'>Habit</th><th align='center'>Frequency</th><th align='center'>Streak</th><th align='center'>Points</th><th align='center'>Target Streak</th></tr>"
             for habit in habits:
                 habit_list += "<tr>"
                 habit_list += f"<td>{habit.name}</td>"
                 habit_list += f"<td align='center'>{habit.frequency} day{'s' if habit.frequency > 1 else ''}</td>"
                 habit_list += f"<td align='center'>{habit.streak}</td>"
                 habit_list += f"<td align='center'>{habit.points}</td>"
+                habit_list += f"<td align='center'>{habit.target_streak if habit.target_streak else '-'}</td>"
                 habit_list += "</tr>"
             habit_list += "</table>"
             self.habit_list.setHtml(habit_list)
@@ -180,3 +206,4 @@ if __name__ == "__main__":
     window = HabitTrackerWindow()
     window.run()
     app.exec_()
+
