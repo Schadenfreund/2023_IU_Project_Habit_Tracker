@@ -1,22 +1,17 @@
-from datetime import date
-
-
 class Habit:
-    def __init__(self, name, frequency, target_streak):
+    def __init__(self, name, frequency, target_streak, last_checked=None, points=0, streak=0):
         self.name = name
         self.frequency = frequency
         self.target_streak = target_streak
-        self.last_checked = None
-        self.streak = 0
-        self.points = 0
+        self.last_checked = last_checked
+        self.points = points
+        self.streak = streak
 
-    def check(self):
-        today = date.today()
-
+    def check(self, check_date):
         # If habit has never been checked or has not been checked in frequency days
-        if self.last_checked is None or (today - self.last_checked).days >= self.frequency:
+        if self.last_checked is None or (check_date - self.last_checked).days >= self.frequency:
             self.streak += 1
-            self.last_checked = today
+            self.last_checked = check_date
 
             # Increment points based on streak length
             if self.streak % self.frequency == 0:
@@ -35,7 +30,7 @@ class Habit:
 
         else:
             # Reset streak and deduct points for missed days
-            missed_days = (today - self.last_checked).days - self.frequency
+            missed_days = (check_date - self.last_checked).days - self.frequency
             if missed_days > 0:
                 self.streak = 0
                 penalty_points = missed_days

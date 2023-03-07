@@ -8,6 +8,8 @@ class Database:
         self.cursor = self.conn.cursor()
         self.create_table()
 
+
+
     def create_table(self):
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS habits (
@@ -49,11 +51,13 @@ class Database:
             ''', (new_target_streak, name))
         self.conn.commit()
 
-    def get_all_habits(self):
-        self.cursor.execute('''
+    def get_all_habits(self, db_file=None):
+        conn = sqlite3.connect(db_file) if db_file else self.conn
+        cursor = conn.cursor()
+        cursor.execute('''
             SELECT * FROM habits
         ''')
-        rows = self.cursor.fetchall()
+        rows = cursor.fetchall()
         habits = []
         for row in rows:
             habit = Habit(row[1], row[2], row[3])
@@ -61,10 +65,17 @@ class Database:
             habit.streak = row[5]
             habit.points = row[6]
             habits.append(habit)
+        if db_file:
+            conn.close()
         return habits
 
-    def update_habit_stats(self, habit):
-        self.cursor.execute('''
-            UPDATE habits SET last_checked=?, streak=?, points=? WHERE name=?
-        ''', (habit.last_checked, habit.streak, habit.points, habit.name))
+    def update_habit_stats(self, habit, use_demo=False):
+        if use_demo:
+            self.cursor.execute('''
+                UPDATE habits SET last_checked=?, streak=?, points=? WHERE name=?
+            ''', (habit.last_checked, habit.streak, habit.points, habit.name))
+        else:
+            self.cursor.execute('''
+                UPDATE habits SET last_checked=?, streak=?, points=? WHERE name=?
+            ''', (habit.last_checked, habit.streak, habit.points, habit.name))
         self.conn.commit()

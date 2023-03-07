@@ -145,10 +145,13 @@ class HabitTrackerWindow(QWidget):
         choice, ok = QInputDialog.getItem(self, "Check Habit", "Select a habit to check off:", habit_names, 0, False)
         if ok:
             habit = habits[habit_names.index(choice)]
-            self.tracker.check_habit(habit.name)
-            self.db.update_habit_stats(habit)
-            QMessageBox.information(self, "Habit Checked",
-                                    f"You checked the habit '{habit.name}' on {habit.last_checked}. Your streak is now {habit.streak}. You have {habit.points} points.")
+            if habit.check():
+                self.db.update_habit_stats(habit)
+                QMessageBox.information(self, "Habit Checked",
+                                        f"You checked the habit '{habit.name}' on {habit.last_checked}. Your streak is now {habit.streak}. You have {habit.points} points.")
+            else:
+                QMessageBox.warning(self, "Habit Already Checked",
+                                    f"You already checked the habit '{habit.name}' today.")
             self.habit_list.setText(self.get_habit_list())
             self.show_quote()
 
