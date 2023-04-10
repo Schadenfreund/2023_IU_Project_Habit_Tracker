@@ -1,6 +1,6 @@
 Hello! 
 
-My name is Ivan, and I created this app as part of my journey to learn Python and for an assignment in my class at IU Academy in March 2023. Fortunately, with the existence of modern AI, I was able to use ChatGPT to help me learn coding concepts and create a functional prototype more quickly.
+I created this app as part of my journey to learn Python and for an assignment in my class at IU Academy in March 2023. Fortunately, with the existence of modern AI, I was able to use ChatGPT to help me learn coding concepts and create a functional prototype more quickly.
 
 The app is not complete, and some features like GUI and the implementation of bonus points are still lacking. Nonetheless, it was a fun exercise.
 
