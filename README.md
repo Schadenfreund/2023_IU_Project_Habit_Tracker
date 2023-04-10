@@ -69,7 +69,7 @@ This will launch the app and display a menu of options. Here's a brief descripti
      | habit_tracker.py |    | database.py            |    | motivational_quotes.py|    | habits.py             |
      |                  |    |                        |    |                       |    |                       |
      | add_habit()      |    | create_table()         |    | get_quote()           |    | check()               |    
-     | delete_habit()   |    | insert_habit()         |    |                       |    |                       |
+     | delete_habit()   |    | insert_habit()         |    | update_quote()        |    |                       |
      | modify_habit()   |    | delete_habit()         |    |                       |    |                       |
      | check_habit()    |    | update_habit()         |    |                       |    |                       |
      |                  |    | get_all_habits()       |    |                       |    |                       |
