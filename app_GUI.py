@@ -1,20 +1,27 @@
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QGridLayout, QLabel, QLineEdit, QSpinBox,
-    QPushButton, QTextEdit, QMessageBox, QInputDialog
-)
+
+from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QSpinBox, QPushButton, QTextEdit, QMessageBox, QInputDialog, \
+    QApplication, QGridLayout
+from matplotlib import pyplot as plt
+import matplotlib.colors as mcolors
+
 from habit_tracker import HabitTracker
 from database import Database
 from motivational_quotes import MotivationalQuotes
-
+from datetime import datetime
 
 
 class HabitTrackerWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.habit_data_window = None
         self.setWindowTitle("Habit Tracker")
 
         layout = QGridLayout()
+
+        # Create a MotivationalQuotes instance and get the initial quote
+        self.quotes = MotivationalQuotes()
+        initial_quote = self.quotes.get_quote()
 
         # Add widgets to layout
         habit_name_label = QLabel("Name of habit:")
@@ -58,16 +65,22 @@ class HabitTrackerWindow(QWidget):
         check_habit_button.clicked.connect(self.check_habit)
         layout.addWidget(check_habit_button, 6, 0)
 
+        show_data_button = QPushButton("Show Diagram")
+        show_data_button.clicked.connect(self.show_habit_data)
+        layout.addWidget(show_data_button, 6, 1)
+
         list_habits_button = QPushButton("Update List")
         list_habits_button.clicked.connect(self.list_habits)
-        layout.addWidget(list_habits_button, 6, 1)
+        layout.addWidget(list_habits_button, 7, 0)
 
         quit_button = QPushButton("Quit")
         quit_button.clicked.connect(self.close)
-        layout.addWidget(quit_button, 7, 0)
+        layout.addWidget(quit_button, 7, 1)
 
+        # Set the initial value of the quote label
         self.quote_label = QLabel()
         self.quote_label.setWordWrap(True)
+        self.quote_label.setText(f"Motivational Quote of the Day: '{initial_quote}'")
         layout.addWidget(self.quote_label, 8, 0, 1, 2)
 
         self.setLayout(layout)
@@ -97,6 +110,59 @@ class HabitTrackerWindow(QWidget):
             QMessageBox.information(self, "Habit Deleted", f"The habit '{habit_name}' has been deleted.")
             self.habit_list.setText(self.get_habit_list())
 
+    def show_habit_data(self):
+        habits = self.db.get_all_habits()
+
+        if not habits:
+            QMessageBox.information(self, "No Habits", "You have no habits to show data for.")
+            return
+
+        # Divide habits into groups of 10
+        habit_groups = [habits[i:i + 10] for i in range(0, len(habits), 10)]
+
+        for group_idx, group in enumerate(habit_groups):
+            # Create a list of habit names and their current streaks for this group
+            habit_names = [habit.name for habit in group]
+            habit_streaks = [habit.streak for habit in group]
+
+            # Create a list of target streaks with None values replaced by zero
+            target_streaks = [habit.target_streak if habit.target_streak else 0 for habit in group]
+
+            # Generate a list of colors for the bars based on the number of habits
+            num_habits = len(group)
+            colors = list(mcolors.TABLEAU_COLORS.values())[:num_habits]
+
+            # Create the plot
+            fig, ax = plt.subplots(figsize=(10, 6))
+
+            # Add the target streak bars
+            ax.bar(range(len(group)), target_streaks, color="lightgray")
+
+            # Add the current streak bars
+            ax.bar(range(len(group)), habit_streaks, color=colors, alpha=0.7)
+
+            # Add text labels for the current and target streaks
+            for i in range(len(group)):
+                ax.text(i, habit_streaks[i] + 1, str(habit_streaks[i]), ha="center", va="bottom",
+                        color=colors[i])
+                ax.text(i, target_streaks[i] + 1, str(target_streaks[i]), ha="center", va="bottom", color="black")
+
+                # Add habit name vertically and inside the column
+                ax.text(i, 0.5 * (habit_streaks[i] + target_streaks[i]), habit_names[i], ha="center", va="center",
+                        color=colors[i], rotation=90, fontsize=10)
+
+            # Set the x-axis labels to empty string
+            ax.set_xticklabels([''] * len(group))
+
+            # Set the y-axis limits
+            ax.set_ylim([0, max(max(habit_streaks), max(target_streaks)) + 2])
+
+            # Set the plot title and axis labels
+            ax.set_title("Habit Streaks (Group {})".format(group_idx + 1))
+            ax.set_ylabel("Streak")
+
+            # Show the plot
+            plt.show()
     def modify_habit(self):
         habits = self.db.get_all_habits()
         if not habits:
@@ -143,9 +209,10 @@ class HabitTrackerWindow(QWidget):
 
         habit_names = [habit.name for habit in habits]
         choice, ok = QInputDialog.getItem(self, "Check Habit", "Select a habit to check off:", habit_names, 0, False)
+        print(f"Choice: {choice}, ok: {ok}")
         if ok:
             habit = habits[habit_names.index(choice)]
-            if habit.check():
+            if habit.check(datetime.now().date()):  # add check_date argument
                 self.db.update_habit_stats(habit)
                 QMessageBox.information(self, "Habit Checked",
                                         f"You checked the habit '{habit.name}' on {habit.last_checked}. Your streak is now {habit.streak}. You have {habit.points} points.")
@@ -153,7 +220,6 @@ class HabitTrackerWindow(QWidget):
                 QMessageBox.warning(self, "Habit Already Checked",
                                     f"You already checked the habit '{habit.name}' today.")
             self.habit_list.setText(self.get_habit_list())
-            self.show_quote()
 
     def list_habits(self):
         habits = self.db.get_all_habits()
@@ -182,8 +248,8 @@ class HabitTrackerWindow(QWidget):
         if not habits:
             self.habit_list.setText("You have no habits.")
         else:
-            habit_list = "<table>"
-            habit_list += "<tr><th align='left'>Habit</th><th align='center'>Frequency</th><th align='center'>Streak</th><th align='center'>Points</th><th align='center'>Target Streak</th></tr>"
+            habit_list = "<table style='width:100%'>"
+            habit_list += "<tr><th align='left'> Habit </th><th align='center'> Frequency </th><th align='center'> Streak </th><th align='center'> Points </th><th align='center'> Target Streak </th></tr>"
             for habit in habits:
                 habit_list += "<tr>"
                 habit_list += f"<td>{habit.name}</td>"
@@ -194,15 +260,16 @@ class HabitTrackerWindow(QWidget):
                 habit_list += "</tr>"
             habit_list += "</table>"
             self.habit_list.setHtml(habit_list)
+            self.habit_list.document().setDefaultStyleSheet("table { width: 100%; }")
         return habit_list
 
     def run(self):
         self.db = Database("habits.db")
         self.tracker = HabitTracker()
-        self.quotes = MotivationalQuotes()
         self.show_quote()
         self.habit_list.setText(self.get_habit_list())
         self.show()
+
 
 if __name__ == "__main__":
     app = QApplication([])

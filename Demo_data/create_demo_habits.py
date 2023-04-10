@@ -1,48 +1,45 @@
-import sqlite3
-from datetime import datetime, timedelta
-from habit_tracker import Habit
+import random
+import datetime
+from habits import Habit
 from database import Database
 
+# Initialize database
+db = Database('../demo_habits.db')
 
-def populate_database():
-    db = Database("demo_habits.db")
+# Habits to insert
+habits_to_insert = [
+    ('Drink 8 glasses of water', 7, 28),
+    ('Exercise for 60 minutes', 4, 16),
+    ('Do Cardio', 7, 28),
+    ('Read for 30 minutes', 7, 28),
+    ('Write 500 words', 3, 12),
+    ('Practice python', 2, 8),
+    ('Floss teeth', 7, 28),
+    ('Think of something nice', 7, 28),
+    ('Play guitar', 7, 28),
+    ('Get 8 hours of sleep', 7, 28)
+]
 
-    # Define example daily habits
-    daily_habits = [
-        Habit("Drink 8 glasses of water", 1, 28, 3, 0),  # Followed for 3 days
-        Habit("Exercise for 30 minutes", 1, 28, 7, 0),  # Neglected for 7 days
-        Habit("Read for 30 minutes", 1, 28, 0, 0),  # Not attempted yet
-        Habit("Meditate for 10 minutes", 1, 28, 14, 0),  # Followed for 14 days
-        Habit("Write in journal", 1, 28, 0, 0),  # Not attempted yet
-    ]
+# Insert habits
+for habit_info in habits_to_insert:
+    name, frequency, target_streak = habit_info
+    db.insert_habit(name, frequency, target_streak)
 
-    # Define example weekly habits
-    weekly_habits = [
-        Habit("Go to bed before 11pm", 7, 28, 14, 0),  # Followed for 14 days
-        Habit("Do a daily task for a big project", 7, 28, 21, 0),  # Followed for 21 days
-        Habit("No alcohol", 7, 28, 0, 0),  # Not attempted yet
-        Habit("Stretch for 10 minutes", 7, 28, 7, 0),  # Followed for 7 days
-        Habit("Practice deep breathing", 7, 28, 0, 0),  # Not attempted yet
-        Habit("Do something creative", 7, 28, 14, 0),  # Followed for 14 days
-        Habit("YOLO something", 7, 28, 0, 0),  # Not attempted yet
-    ]
+# Generate data for 4 weeks
+start_date = datetime.date.today() - datetime.timedelta(days=28)
+current_date = start_date
+end_date = datetime.date.today()
+while current_date <= end_date:
+    for habit in db.get_all_habits():
+        if habit.frequency == 7 or current_date.weekday() == habit.frequency:
+            if habit.last_checked is None or habit.last_checked < current_date:
+                if random.random() < 0.8:  # 80% chance of success
+                    habit.streak += 1
+                    habit.points += 1
+                else:
+                    habit.streak = 0
+                habit.last_checked = current_date
+                db.update_habit_stats(habit, use_demo=True)
+    current_date += datetime.timedelta(days=1)
 
-    # Add habits to database
-    for habit in daily_habits + weekly_habits:
-        db.insert_habit(habit.name, habit.frequency, habit.target_streak)
-
-    # Check off habits for four weeks
-    today = datetime.now().date()
-    for i in range(28):
-        date = today - timedelta(days=i)
-        for habit in db.get_all_habits():
-            if habit.frequency == 1 and (habit.last_checked is None or (date - habit.last_checked).days >= 1):
-                habit.check(date)
-                db.update_habit_stats(habit)
-            elif habit.frequency == 7 and (habit.last_checked is None or (date - habit.last_checked).days >= 7):
-                habit.check(date)
-                db.update_habit_stats(habit)
-
-
-if __name__ == "__main__":
-    populate_database()
+print("Demo database generated successfully.")

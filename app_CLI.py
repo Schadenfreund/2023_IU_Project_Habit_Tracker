@@ -4,6 +4,7 @@ from motivational_quotes import MotivationalQuotes
 from datetime import date
 from colorama import init, Fore, Style
 
+
 class HabitTrackerApp:
     def __init__(self, db_file, use_demo=False):
         self.use_demo = use_demo
@@ -107,15 +108,17 @@ class HabitTrackerApp:
             print('You have no habits.')
         else:
             print(
-                f'{Fore.CYAN}{"Habit":<50} {"Frequency":<10} {"Target Streak":<15} {"Streak":<10} {"Points":<10}{Style.RESET_ALL}')
+                f'{Fore.CYAN}{"Habit":<50} {"Frequency":<10} {"Target Streak":<15} {"Streak":<10} {"Points":<8}{Style.RESET_ALL}')
             print('-' * 95)
             for habit in habits:
                 habit_name = habit.name
                 # change text color for demo mode
                 if self.use_demo:
-                    habit_name = f'{Fore.RED}{habit.name}{Style.RESET_ALL}'
+                    habit_name = f'DEMO {Fore.RED}{habit.name}{Style.RESET_ALL}'
+                else:
+                    habit_name = f'{Fore.GREEN}{habit.name}{Style.RESET_ALL}'
                 print(
-                    f'{habit_name:<50} {habit.frequency:<10} {habit.target_streak:<15} {habit.streak:<10} {habit.points:<10}')
+                    f'{habit_name:<62} {habit.frequency:<11} {habit.target_streak:<13} {habit.streak:<9} {habit.points:<12}')
     def run(self):
         while True:
             print('Enter an option:')
@@ -148,6 +151,7 @@ class HabitTrackerApp:
                 break
             else:
                 print('Invalid choice')
+
 
 if __name__ == '__main__':
     app = HabitTrackerApp('habits.db')
